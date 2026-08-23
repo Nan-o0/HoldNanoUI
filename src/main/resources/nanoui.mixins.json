@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "gg.nano.ui.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "DebugEntryPositionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
