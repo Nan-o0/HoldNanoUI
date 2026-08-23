@@ -1,0 +1,22 @@
+# Build output and caches. Not source - regenerated every build, and .gradle alone is 73MB
+# of downloaded Minecraft and library jars that nobody should be pulling from a git clone.
+build/
+.gradle/
+
+# Editors
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Nothing secret lives in this project today, and this is here so it stays that way. The
+# server side - keys, ban lists, player IPs, server.properties - is a separate folder and
+# must never end up in here.
+*.key
+secret*

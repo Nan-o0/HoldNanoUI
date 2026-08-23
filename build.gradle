@@ -1,0 +1,54 @@
+plugins {
+	// Must be the fully-qualified id. The bare 'fabric-loom' marker resolves to an older
+	// plugin that still requires a mappings dependency, which no longer exists for
+	// unobfuscated Minecraft - that mismatch fails the build regardless of Loom version.
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// No mappings line on purpose. Minecraft ships unobfuscated from 26.1 onward with
+	// parameter names included, so Yarn was retired and Mojang publishes no mapping file.
+	// This matches the official Fabric template for 26.2 exactly.
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+// Stamped into the jar so the client can log which build it is actually running. Mods load
+// at game start, so a jar deployed while the game is open is not the jar in use - without a
+// stamp that is invisible and looks exactly like a change that did not work.
+def buildTime = new Date().format("yyyy-MM-dd HH:mm")
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "buildTime", buildTime
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+	filesMatching("nanoui-build.properties") {
+		expand "buildTime": buildTime
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
