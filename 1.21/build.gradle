@@ -1,0 +1,58 @@
+// Loaded through buildscript rather than the plugins block. Only the 1.17 plugin marker is
+// in the local cache and 1.11 is a snapshot Fabric has since cleaned from their maven, so the
+// marker cannot be resolved even though the jar itself is sitting right there.
+buildscript {
+	repositories {
+		maven { url = 'https://maven.fabricmc.net/' }
+		mavenCentral()
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:${loom_version}"
+	}
+}
+apply plugin: 'java'
+apply plugin: 'fabric-loom'
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = "${project.archives_base_name}-1.21"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// 1.21 is still obfuscated, so unlike the 26.2 build this one genuinely needs mappings.
+	// That is the whole reason Loom has to be involved here and javac alone cannot do it.
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	// Mojang official, not Yarn. Yarn invents its own names; Mojang mappings use the same
+	// class and method names the 26.2 source already compiles against, so the shared files
+	// stand a chance of building unchanged.
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	// modImplementation, not implementation. Loom only remaps dependencies declared as mods;
+	// as a plain implementation the Fabric API jar stays in intermediary and every Minecraft
+	// type it exposes comes through as class_310 and friends.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+// Compiled for Java 21 using the JDK 25 that is already here, rather than demanding a
+// second JDK be installed. --release 21 is exactly what a real 21 toolchain would emit;
+// the toolchain block was asking Gradle to go and find a JDK that does not exist on this
+// machine.
+tasks.withType(JavaCompile).configureEach {
+	options.release = 21
+}
+
+// The 26.2 build has this and the port did not carry it over, so the jar shipped with a
+// literal ${version} in fabric.mod.json. Fabric tolerates that at load, and then the server
+// compares "${version}" against the real one and tells the player to update forever.
+processResources {
+	inputs.property "version", project.version
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}

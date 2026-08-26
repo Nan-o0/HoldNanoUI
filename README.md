@@ -17,14 +17,25 @@ Bedrock players can ignore all of this. You already get native forms through Gey
 ## Installing
 
 You need [Fabric](https://fabricmc.net/use/installer) and
-[Fabric API](https://modrinth.com/mod/fabric-api). Works on Minecraft 26.1 and 26.2.
+[Fabric API](https://modrinth.com/mod/fabric-api).
 
-On 1.21 it will not load, and it does not need to. The server sends those players the new
-blocks and mobs with the right textures anyway, so the only thing missing there is the nicer
-looking menus.
+There are two builds on the [Releases](../../releases/latest) page and you want one of them,
+not both:
 
-Download `Nan0UI.jar` from [Releases](../../releases/latest), put it in your `mods` folder
-and start the game. Nothing to configure.
+| Your Minecraft | The file to download |
+| --- | --- |
+| 26.1 or 26.2 | `Nan0UI.jar` |
+| 1.21 or 1.21.1 | `Nan0UI-1.21.jar` |
+
+Put it in your `mods` folder and start the game. Nothing to configure.
+
+They are not interchangeable. Install the wrong one and Minecraft refuses to open at all,
+because Fabric checks what version a mod asks for before it starts. If that happens, delete
+the file and everything goes back to normal.
+
+Anything between 1.21.2 and 26.0 has no build yet. Nothing breaks, you just get the chest
+menus instead, and the server still sends you the new blocks and mobs with the right
+textures. Same for Bedrock, where you already get native forms through Geyser.
 
 ## Updating
 
@@ -65,6 +76,19 @@ gradle build
 ```
 
 The jar lands in `build/libs`. You need JDK 21 or newer.
+
+The 1.21 build is generated from the same source:
+
+```
+cd 1.21
+python3 port.py
+gradle build
+```
+
+There is one copy of this mod and it is written against 26.2. `port.py` rewrites the calls
+Mojang renamed on the way back to 1.21 and writes the result into `1.21/src/main/java`, which
+is why you will not find that folder in the repository. Keeping a second copy of the code by
+hand would mean the two drifting apart within a week.
 
 ## Licence
 

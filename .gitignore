@@ -24,3 +24,8 @@ secret*
 # Project-local Gradle, 150MB extracted. Fetched by hand because Minecraft 1.21 is
 # obfuscated and Loom is the only thing that can remap it; 26.2 builds fine without.
 tools/
+
+# The 1.21 source is generated from the 26.2 source by 1.21/port.py, so it is an output and
+# not something to edit or commit. Its resources next door are hand written and do belong
+# here. Run the script after changing anything under src/.
+1.21/src/main/java/

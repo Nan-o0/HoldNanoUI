@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "nanoui",
+  "version": "${version}",
+  "name": "NanoUI (1.21)",
+  "description": "Native button screens for Test SMP. Optional - the server falls back to chest menus without it.",
+  "authors": [
+    "NanO0h"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "gg.nano.ui.NanoUiClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~1.21.1",
+    "fabric-api": "*"
+  }
+}
