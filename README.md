@@ -19,7 +19,13 @@ Bedrock players can ignore all of this. You already get native forms through Gey
 You need [Fabric](https://fabricmc.net/use/installer) and
 [Fabric API](https://modrinth.com/mod/fabric-api).
 
-Download `Nan0UI.jar` from [Releases](../../releases/latest), put it in your `mods` folder
+The easy way is the pack. Grab `HoldSMP-26.2-*.mrpack` from
+[Releases](../../releases/latest) and open it with the
+[Modrinth launcher](https://modrinth.com/app), which installs Minecraft, Fabric, Fabric API
+and this mod together. Nothing else to do. There is a `HoldSMP-1.21.1-*.mrpack` as well if
+you would rather play on 1.21.
+
+Doing it by hand instead: download `Nan0UI.jar` from Releases, put it in your `mods` folder
 and start the game. Nothing to configure, and there is only one file to pick.
 
 It runs on **1.21, 1.21.1, 26.1 and 26.2**. Same jar for all of them.
