@@ -20,3 +20,7 @@ Thumbs.db
 # must never end up in here.
 *.key
 secret*
+
+# Project-local Gradle, 150MB extracted. Fetched by hand because Minecraft 1.21 is
+# obfuscated and Loom is the only thing that can remap it; 26.2 builds fine without.
+tools/
