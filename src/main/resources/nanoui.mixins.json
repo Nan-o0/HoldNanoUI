@@ -3,10 +3,9 @@
   "minVersion": "0.8",
   "package": "gg.nano.ui.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": [
-    "DebugEntryPositionMixin"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "gg.nano.ui.mixin.MixinGate"
 }

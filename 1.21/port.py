@@ -25,6 +25,12 @@ def find_source():
 SRC = find_source()
 DST = "src/main"
 
+# The ported copy goes in its own package so both copies can sit in one jar. They cannot
+# share one: this copy refers to Minecraft by its obfuscated-era names and the other by the
+# real ones, and a single class cannot hold both. Same class names, different package, and
+# only the package matching the running version is ever loaded.
+LEGACY_PACKAGE = "gg.nano.ui.legacy"
+
 NL = chr(10)
 
 # No 1.21 equivalent at all. FakePosition and its mixin drive Random Coords, which hides your
@@ -35,9 +41,20 @@ SKIP = {
     "gg/nano/ui/FakePosition.java",
     "gg/nano/ui/mixin/DebugEntryPositionMixin.java",
     "gg/nano/ui/UiTest.java",
+    # These two are version independent and there must be exactly one of each. Bootstrap
+    # picks between the two copies of the mod, so a second copy of it inside the copy it
+    # picks would be circular; MixinGate is asked which mixins apply before either copy is
+    # loaded. Both mention no Minecraft type at all, which is what lets them be shared.
+    "gg/nano/ui/Bootstrap.java",
+    "gg/nano/ui/mixin/MixinGate.java",
 }
 
 RULES = [
+    # Own package. Everything in this mod sits in one package, so same-package references
+    # need no rewriting and moving the declaration is enough.
+    (r"^package gg\.nano\.ui;", "package " + LEGACY_PACKAGE + ";"),
+    (r"gg\.nano\.ui\.mixin", LEGACY_PACKAGE + ".mixin"),
+
     # ResourceLocation was renamed Identifier in 26.x.
     (r"net\.minecraft\.resources\.Identifier", "net.minecraft.resources.ResourceLocation"),
     (r"\bIdentifier\b", "ResourceLocation"),
@@ -142,7 +159,7 @@ def main():
             text = io.open(full, encoding="utf-8").read()
             before = text
             for pattern, replacement in RULES:
-                text = re.sub(pattern, replacement, text)
+                text = re.sub(pattern, replacement, text, flags=re.MULTILINE)
             out = os.path.join(DST + "/java", rel)
             os.makedirs(os.path.dirname(out), exist_ok=True)
             io.open(out, "w", encoding="utf-8", newline=NL).write(text)

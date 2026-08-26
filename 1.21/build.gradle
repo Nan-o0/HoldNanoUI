@@ -45,14 +45,27 @@ dependencies {
 // machine.
 tasks.withType(JavaCompile).configureEach {
 	options.release = 21
+	// Set explicitly rather than relied on. JDK 18 and newer default to UTF-8 so this build
+	// happens to be fine without it, but the progress bar is drawn out of box characters and
+	// an older JDK reading them as the platform codepage would turn it into rubbish.
+	options.encoding = "UTF-8"
 }
 
 // The 26.2 build has this and the port did not carry it over, so the jar shipped with a
 // literal ${version} in fabric.mod.json. Fabric tolerates that at load, and then the server
 // compares "${version}" against the real one and tells the player to update forever.
+def buildTime = new Date().format("yyyy-MM-dd HH:mm")
+
 processResources {
 	inputs.property "version", project.version
+	inputs.property "buildTime", buildTime
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
+	}
+	// Without this the jar ships the placeholder verbatim and the client reports its build
+	// date as ${buildTime}, which is the sort of thing only ever noticed while trying to work
+	// out which build somebody is actually running.
+	filesMatching("nanoui-build.properties") {
+		expand "buildTime": buildTime
 	}
 }

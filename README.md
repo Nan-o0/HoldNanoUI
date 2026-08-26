@@ -19,23 +19,15 @@ Bedrock players can ignore all of this. You already get native forms through Gey
 You need [Fabric](https://fabricmc.net/use/installer) and
 [Fabric API](https://modrinth.com/mod/fabric-api).
 
-There are two builds on the [Releases](../../releases/latest) page and you want one of them,
-not both:
+Download `Nan0UI.jar` from [Releases](../../releases/latest), put it in your `mods` folder
+and start the game. Nothing to configure, and there is only one file to pick.
 
-| Your Minecraft | The file to download |
-| --- | --- |
-| 26.1 or 26.2 | `Nan0UI.jar` |
-| 1.21 or 1.21.1 | `Nan0UI-1.21.jar` |
+It runs on **1.21, 1.21.1, 26.1 and 26.2**. Same jar for all of them.
 
-Put it in your `mods` folder and start the game. Nothing to configure.
-
-They are not interchangeable. Install the wrong one and Minecraft refuses to open at all,
-because Fabric checks what version a mod asks for before it starts. If that happens, delete
-the file and everything goes back to normal.
-
-Anything between 1.21.2 and 26.0 has no build yet. Nothing breaks, you just get the chest
-menus instead, and the server still sends you the new blocks and mobs with the right
-textures. Same for Bedrock, where you already get native forms through Geyser.
+Anything between 1.21.2 and 26.0 is not covered yet. Nothing breaks if you are on one of
+those, the mod just does not load and you get the chest menus, and the server still sends you
+the new blocks and mobs with the right textures. Same for Bedrock, where you already have
+native forms through Geyser.
 
 ## Updating
 
@@ -77,18 +69,33 @@ gradle build
 
 The jar lands in `build/libs`. You need JDK 21 or newer.
 
-The 1.21 build is generated from the same source:
+That builds the 26.x half. The full jar needs the 1.21 half as well:
 
 ```
 cd 1.21
 python3 port.py
 gradle build
+cd ..
+python3 merge.py
 ```
 
-There is one copy of this mod and it is written against 26.2. `port.py` rewrites the calls
-Mojang renamed on the way back to 1.21 and writes the result into `1.21/src/main/java`, which
-is why you will not find that folder in the repository. Keeping a second copy of the code by
-hand would mean the two drifting apart within a week.
+`Nan0UI.jar` lands in `build/libs`.
+
+### Why there are two halves
+
+Minecraft ships unobfuscated from 26.1 and is obfuscated before that. A mod built for 1.21
+calls Minecraft `class_310`; a mod built for 26.2 calls it `Minecraft`. Those are two
+different names, not two spellings of one, so no single compiled class can hold both.
+
+So the code is compiled twice, into `gg.nano.ui` and `gg.nano.ui.legacy`, and both go in the
+jar. `Bootstrap` reads the version at startup and loads one of them. Java loads a class the
+first time something uses it, so the half that does not match your version is never looked at,
+and a name that is never looked up cannot fail.
+
+There is still only one copy of the source. `port.py` rewrites the calls Mojang renamed and
+generates `1.21/src/main/java`, which is why that folder is not in the repository. `merge.py`
+combines the two jars and checks the result: right namespaces, right bytecode version, and
+`Bootstrap` naming no Minecraft class at all.
 
 ## Licence
 

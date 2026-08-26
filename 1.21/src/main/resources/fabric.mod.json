@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "nanoui",
   "version": "${version}",
-  "name": "NanoUI (1.21)",
-  "description": "Native button screens for Test SMP. Optional - the server falls back to chest menus without it.",
+  "name": "NanoUI (1.21 half)",
+  "description": "Intermediate build. Merged into Nan0UI.jar by merge.py and not shipped on its own.",
   "authors": [
     "NanO0h"
   ],
@@ -11,7 +11,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "gg.nano.ui.NanoUiClient"
+      "gg.nano.ui.legacy.NanoUiClient"
     ]
   },
   "depends": {

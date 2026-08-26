@@ -44,7 +44,10 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = 25
+	// 21, not 25, even though this build targets 26.2 which runs on Java 25. The 1.21 classes
+	// ship in the same jar and a 1.21 client is on Java 21, where a class compiled for 25
+	// cannot even be read. Older bytecode runs fine on the newer JVM; the reverse does not.
+	it.options.release = 21
 }
 
 java {
