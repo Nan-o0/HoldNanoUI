@@ -537,7 +537,7 @@ public final class NanoScreen extends Screen {
         }
 
         if (screen != null) {
-            Minecraft.getInstance().setScreenAndShow(screen);
+            Compat.setScreen(screen);
         }
         return screen;
     }

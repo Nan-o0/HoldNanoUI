@@ -16,8 +16,12 @@ Bedrock players can ignore all of this. You already get native forms through Gey
 
 ## Installing
 
-You need [Fabric](https://fabricmc.net/use/installer) for Minecraft 26.2 and
-[Fabric API](https://modrinth.com/mod/fabric-api).
+You need [Fabric](https://fabricmc.net/use/installer) and
+[Fabric API](https://modrinth.com/mod/fabric-api). Works on Minecraft 26.1 and 26.2.
+
+On 1.21 it will not load, and it does not need to. The server sends those players the new
+blocks and mobs with the right textures anyway, so the only thing missing there is the nicer
+looking menus.
 
 Download `Nan0UI.jar` from [Releases](../../releases/latest), put it in your `mods` folder
 and start the game. Nothing to configure.

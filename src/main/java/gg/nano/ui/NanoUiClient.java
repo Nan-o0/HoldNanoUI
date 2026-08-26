@@ -104,7 +104,7 @@ public final class NanoUiClient implements ClientModInitializer {
                     var menuButton = net.minecraft.client.gui.components.Button.builder(
                                     net.minecraft.network.chat.Component.literal("Hold SMP Menu"),
                                     button -> {
-                                        client.setScreenAndShow(null);
+                                        Compat.setScreen(null);
                                         if (client.player != null) {
                                             client.player.connection.sendCommand("menu");
                                         }

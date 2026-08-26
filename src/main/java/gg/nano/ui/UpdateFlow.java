@@ -90,11 +90,11 @@ public final class UpdateFlow {
                 return true;
             }
             case "local:update_no" -> {
-                Minecraft.getInstance().setScreenAndShow(null);
+                Compat.setScreen(null);
                 return true;
             }
             case "local:update_close" -> {
-                Minecraft.getInstance().setScreenAndShow(null);
+                Compat.setScreen(null);
                 return true;
             }
             default -> {
@@ -295,7 +295,7 @@ public final class UpdateFlow {
 
     private static void fail(String why) {
         onMain(() -> {
-            Minecraft.getInstance().setScreenAndShow(null);
+            Compat.setScreen(null);
             chat("<red>The update could not be installed. " + why);
             chat("<gray>Nothing was changed. You can keep playing as you are.");
         });

@@ -433,7 +433,7 @@ public final class UiTest {
             ticks = 0;
             if (index >= CASES.size()) {
                 index = -1;
-                client.setScreenAndShow(null);
+                Compat.setScreen(null);
                 if (problems == 0) {
                     NanoUiClient.LOGGER.info("UI test: done. No layout problems found.");
                 } else {
