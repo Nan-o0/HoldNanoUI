@@ -50,6 +50,27 @@ SKIP = {
 }
 
 RULES = [
+    # The block wire, which only exists on the old versions. The 26.2 client has these
+    # blocks already and is never sent the message, so the call is injected here rather
+    # than living in the shared source and doing nothing on the version it was written
+    # for.
+    (r"                    String data = payload\.data\(\);",
+     "                    String data = payload.data();" + NL
+     + NL
+     + "                    // Real 26.2 blocks for a client that has them registered." + NL
+     + "                    if (HoldWire.handle(data)) {" + NL
+     + "                        return;" + NL
+     + "                    }"),
+
+    # The retry queue has to be pumped, and the tick hook the 26.2 build uses for the
+    # screenshot harness is removed on this side, so this rides along with it.
+    (r"        PriceBook\.register\(\);",
+     "        PriceBook.register();" + NL
+     + NL
+     + "        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents"
+     + NL
+     + "                .END_CLIENT_TICK.register(c -> HoldWire.tick());"),
+
     # Own package. Everything in this mod sits in one package, so same-package references
     # need no rewriting and moving the declaration is enough.
     (r"^package gg\.nano\.ui;", "package " + LEGACY_PACKAGE + ";"),

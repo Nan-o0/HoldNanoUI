@@ -11,6 +11,7 @@ and nothing is approximated.
 
 Writes into the 1.21 mod so the assets ship inside the jar.
 """
+import io
 import json
 import os
 import shutil
@@ -245,6 +246,18 @@ with open(os.path.join(OUT, "lang", "en_us.json"), "w", encoding="utf-8") as f:
 
 with open(MANIFEST, "w", encoding="utf-8") as f:
     json.dump({"blocks": manifest}, f, indent=1)
+
+# The same list, for the server. It has to know which of its blocks an old client cannot
+# be sent, and that is exactly this set. Generated rather than typed twice, because two
+# copies of a 137 entry list drift the moment either one is edited.
+CORE = ("C:/Users/cupy/Desktop/Dev/Work/Minecraft/HOLD SMP/NanoCore/src/main/resources/"
+        "legacy-blocks.txt")
+with io.open(CORE, "w", encoding="utf-8", newline=chr(10)) as f:
+    f.write("# Blocks a 1.21 client does not have. Written by genreal.py, not by hand."
+            + chr(10))
+    for entry in manifest:
+        f.write(entry["id"] + chr(10))
+print("core list  : legacy-blocks.txt (%d)" % len(manifest))
 
 print("blocks     : %d registered, %d skipped %s" % (len(manifest), len(skipped), skipped))
 print("models     : %d" % len(copied_models))
