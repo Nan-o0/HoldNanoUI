@@ -24,6 +24,11 @@ OUT = os.path.join(HERE, "build", "libs", "Nan0UI.jar")
 
 LEGACY_PREFIX = "gg/nano/ui/legacy/"
 
+# The blocks 26.2 has and 1.21 does not, and everything needed to draw them. Only the 1.21
+# build carries these: a 26.2 client already has all of it and would be downloading two
+# megabytes of its own textures back.
+LEGACY_ASSETS = ("assets/holdsmp/", "holdsmp-blocks.json", "holdsmp-statue.json")
+
 # Java 21. Both halves must be this: a 1.21 client runs on Java 21 and cannot read a class
 # compiled for 25, and Fabric walks the whole jar looking for entry points.
 WANT_BYTECODE = 65
@@ -50,9 +55,18 @@ def main():
     shutil.copyfile(MODERN, OUT)
 
     with zipfile.ZipFile(LEGACY) as source:
-        names = [n for n in source.namelist() if n.startswith(LEGACY_PREFIX)]
+        names = [n for n in source.namelist()
+                 if n.startswith(LEGACY_PREFIX) or n.startswith(LEGACY_ASSETS)]
         check(names, "the 1.21 jar has nothing under " + LEGACY_PREFIX
               + " - did port.py run before it was built?")
+        check(any(n == "holdsmp-blocks.json" for n in names),
+              "holdsmp-blocks.json is missing, so no 26.2 blocks would be registered")
+        blockstates = sum(1 for n in names
+                          if n.startswith("assets/holdsmp/blockstates/"))
+        check(blockstates >= 137,
+              "only " + str(blockstates) + " blockstates made it across, expected 137")
+        check(any(n == "holdsmp-statue.json" for n in names),
+              "holdsmp-statue.json is missing, so statues would render as nothing")
         with zipfile.ZipFile(OUT, "a", zipfile.ZIP_DEFLATED) as out:
             existing = set(out.namelist())
             for name in names:

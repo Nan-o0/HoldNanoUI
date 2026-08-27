@@ -79,6 +79,7 @@ That builds the 26.x half. The full jar needs the 1.21 half as well:
 
 ```
 cd 1.21
+python3 ../generators/genreal.py
 python3 port.py
 gradle build
 cd ..
@@ -86,6 +87,11 @@ python3 merge.py
 ```
 
 `Nan0UI.jar` lands in `build/libs`.
+
+`genreal.py` reads your Minecraft 26.2 jar and writes out the 137 blocks a 1.21 client does
+not have, as models, textures and a manifest. Those files are Mojang's, so they are not in
+this repository and you generate them yourself. Without that step the 1.21 half builds but
+registers nothing.
 
 ### Why there are two halves
 

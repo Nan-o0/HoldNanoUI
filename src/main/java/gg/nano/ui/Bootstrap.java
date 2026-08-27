@@ -30,8 +30,25 @@ public final class Bootstrap implements ClientModInitializer {
     private static final String MODERN = "gg.nano.ui.NanoUiClient";
     private static final String LEGACY = "gg.nano.ui.legacy.NanoUiClient";
 
+    /** Registers the blocks 26.2 has and older versions do not. 1.21 only. */
+    private static final String BLOCKS = "gg.nano.ui.legacy.HoldBlocks";
+
     @Override
     public void onInitializeClient() {
+        // Before anything else, and only on the old versions. Registries are frozen once the
+        // game has finished starting, so a block not added by now can never be added, and the
+        // 26.2 content would fall back to whatever the server substituted.
+        if (legacy()) {
+            try {
+                Class.forName(BLOCKS).getMethod("register").invoke(null);
+            } catch (Throwable ex) {
+                // Not fatal. Without this the new blocks look wrong, which is how it was
+                // before any of this existed; the menus are the reason people install the mod
+                // and they should still work.
+                System.err.println("[Nan0UI] Could not register the 26.2 blocks: " + ex);
+            }
+        }
+
         String target = legacy() ? LEGACY : MODERN;
         try {
             Object impl = Class.forName(target).getDeclaredConstructor().newInstance();

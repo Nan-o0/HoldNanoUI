@@ -29,3 +29,10 @@ tools/
 # not something to edit or commit. Its resources next door are hand written and do belong
 # here. Run the script after changing anything under src/.
 1.21/src/main/java/
+
+# Extracted from the Minecraft client jar by generators/genreal.py: 161 textures and 467 models
+# that Mojang wrote. They are needed to build and they are not ours to publish, so the
+# generator is here and its output is not. Run it before building the 1.21 jar.
+1.21/src/main/resources/assets/holdsmp/
+1.21/src/main/resources/holdsmp-blocks.json
+1.21/src/main/resources/holdsmp-statue.json

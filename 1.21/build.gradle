@@ -20,6 +20,17 @@ base {
 	archivesName = "${project.archives_base_name}-1.21"
 }
 
+// Two source roots. src/main/java is written by port.py and wiped on every run, so nothing
+// hand written can live there; src/native/java is for code that exists only in the 1.21 build
+// and has no 26.2 counterpart to be generated from.
+sourceSets {
+	main {
+		java {
+			srcDir 'src/native/java'
+		}
+	}
+}
+
 repositories {
 	mavenCentral()
 }
@@ -67,5 +78,16 @@ processResources {
 	// out which build somebody is actually running.
 	filesMatching("nanoui-build.properties") {
 		expand "buildTime": buildTime
+	}
+}
+
+// Writes the resolved runtime classpath out so the registration can be exercised headlessly.
+// Registering 137 blocks is the kind of thing that either works entirely or fails on one
+// awkward entry, and finding out which without starting a game is worth a task.
+tasks.register('dumpCp') {
+	doLast {
+		def cp = sourceSets.main.runtimeClasspath.files.collect { it.absolutePath }
+		file("$buildDir/cp.txt").text = cp.join(';')
+		println "wrote ${cp.size()} entries"
 	}
 }
