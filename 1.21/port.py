@@ -47,6 +47,11 @@ SKIP = {
     # loaded. Both mention no Minecraft type at all, which is what lets them be shared.
     "gg/nano/ui/Bootstrap.java",
     "gg/nano/ui/mixin/MixinGate.java",
+    # Compat looks the screen call up by name, which is right for 26.1 against 26.2 where the
+    # name is all that changed, and useless here: 1.21 is obfuscated, so at runtime the method
+    # is not called what the source calls it. The hand written one in src/native calls it
+    # directly and lets Loom remap it.
+    "gg/nano/ui/Compat.java",
 }
 
 RULES = [
