@@ -19,9 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Part names an overlay may share with its body. */
-
-
 /**
  * Draws the mobs 26.2 has and 1.21 does not.
  *
@@ -34,15 +31,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>The geometry is Mojang's, read out of the 26.2 client and rebuilt by {@link HoldGeometry}.
  * Nothing here is a magma cube wearing a hat.
  *
+ * <p>They animate too, with Mojang's own keyframes: 1.21 has the same animation classes as
+ * 26.2, so the definitions are rebuilt rather than imitated. Which animation is playing comes
+ * from how far the stand-in moved since last tick, because it is teleported to follow the real
+ * mob and never walks anywhere itself.
+ *
  * <h2>What this does not do</h2>
  *
- * <p>The models are posed as they are built and do not animate. A copper golem walks without
- * moving its legs. Animations live in their own classes in 26.2, separately from the geometry,
- * and are not read yet; the shape, the size and the texture are right and the movement is not.
- * Saying so here because it is the kind of thing that looks like a bug later.
+ * <p>Armour, saddles and harnesses. What a mob is wearing is state the server does not send,
+ * and a saddle on every nautilus is worse than none. The geometry and the skins are in the jar
+ * for when it does.
  */
 public final class HoldMobs {
 
+    /** Part names an overlay may share with the body it sits on. */
     private static final String[] NAMES = {"root", "body", "head",
         "left_arm", "right_arm", "left_leg", "right_leg", "cube"};
 
