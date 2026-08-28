@@ -143,13 +143,14 @@ public final class HoldMobs {
             }
 
             pose.pushPose();
-            // Entity models are built upside down around a point one block up, which is the
-            // same transform every vanilla mob renderer applies before drawing.
-            pose.translate(0.0F, 1.5F, 0.0F);
-            pose.scale(-1.0F, -1.0F, 1.0F);
+            // The order vanilla uses, taken from LivingEntityRenderer rather than reasoned
+            // about: turn to face, then flip, then drop by 1.501. Doing the move first and
+            // the turn last, as this did, leaves the model lying on its face beside itself.
             pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(
                     180.0F - net.minecraft.util.Mth.rotLerp(partialTick,
                             entity.yBodyRotO, entity.yBodyRot)));
+            pose.scale(-1.0F, -1.0F, 1.0F);
+            pose.translate(0.0F, -1.501F, 0.0F);
 
             ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
                     HoldBlocks.NAMESPACE, TEXTURES.get(mob));

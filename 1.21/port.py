@@ -141,12 +141,16 @@ RULES = [
      + "java.util.UUID.fromString(rawUuid))," + NL
      + "                            new com.mojang.authlib.properties.PropertyMap())"),
 
-    # Sprite drawing lost the render pipeline argument going backwards. blitSprite is the
-    # 1.21 spelling and takes width and height rather than UV bounds.
+    # blitSprite was wrong in a way that showed on one icon only. It looks a name up in
+    # the GUI atlas and this is a plain texture path; nothing lives under gui/sprites/
+    # mob_effect, so the potion icons drew as missing texture while every item icon
+    # beside them was fine. Going backwards loses the render pipeline argument and
+    # nothing else.
     (r"graphics\.blit\(net\.minecraft\.client\.renderer\.RenderPipelines\.GUI_TEXTURED,"
      r"\s*\n\s*icon\.sprite\(\), icon\.x\(\), icon\.y\(\), 0f, 0f, size, size,"
      r"\s*\n\s*SPRITE_SOURCE, SPRITE_SOURCE\)",
-     "graphics.blitSprite(icon.sprite(), icon.x(), icon.y(), size, size)"),
+     "graphics.blit(icon.sprite(), icon.x(), icon.y(), 0f, 0f, size, size," + NL
+     + "                        SPRITE_SOURCE, SPRITE_SOURCE)"),
 
     # PoseStack used the matrix naming in 26.x, and both calls want a Z argument here.
     (r"pose\.pushMatrix\(\)", "pose.pushPose()"),
