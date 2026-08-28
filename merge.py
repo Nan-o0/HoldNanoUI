@@ -27,7 +27,8 @@ LEGACY_PREFIX = "gg/nano/ui/legacy/"
 # The blocks 26.2 has and 1.21 does not, and everything needed to draw them. Only the 1.21
 # build carries these: a 26.2 client already has all of it and would be downloading two
 # megabytes of its own textures back.
-LEGACY_ASSETS = ("assets/holdsmp/", "holdsmp-blocks.json", "holdsmp-statue.json")
+LEGACY_ASSETS = ("assets/holdsmp/", "holdsmp-blocks.json", "holdsmp-statue.json",
+                  "holdsmp-mobs.json")
 
 # Java 21. Both halves must be this: a 1.21 client runs on Java 21 and cannot read a class
 # compiled for 25, and Fabric walks the whole jar looking for entry points.
@@ -67,6 +68,8 @@ def main():
               "only " + str(blockstates) + " blockstates made it across, expected 137")
         check(any(n == "holdsmp-statue.json" for n in names),
               "holdsmp-statue.json is missing, so statues would render as nothing")
+        check(any(n == "holdsmp-mobs.json" for n in names),
+              "holdsmp-mobs.json is missing, so the new mobs would stay magma cubes")
         with zipfile.ZipFile(OUT, "a", zipfile.ZIP_DEFLATED) as out:
             existing = set(out.namelist())
             for name in names:

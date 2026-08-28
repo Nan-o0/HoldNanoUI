@@ -63,7 +63,7 @@ RULES = [
      "                    String data = payload.data();" + NL
      + NL
      + "                    // Real 26.2 blocks for a client that has them registered." + NL
-     + "                    if (HoldWire.handle(data)) {" + NL
+     + "                    if (HoldWire.handle(data) || HoldMobs.handle(data)) {" + NL
      + "                        return;" + NL
      + "                    }"),
 
@@ -74,7 +74,11 @@ RULES = [
      + NL
      + "        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents"
      + NL
-     + "                .END_CLIENT_TICK.register(c -> HoldWire.tick());"),
+     + "                .END_CLIENT_TICK.register(c -> HoldWire.tick());" + NL
+     + NL
+     + "        // Models for the mobs 1.21 has no entity type for." + NL
+     + "        HoldMobs.registerClient();" + NL
+     + "        HoldRenderers.registerClient();"),
 
     # Own package. Everything in this mod sits in one package, so same-package references
     # need no rewriting and moving the declaration is enough.

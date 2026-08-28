@@ -234,7 +234,12 @@ for block in todo:
 
 # Textures the renderers use. These live under entity/ rather than block/, so nothing in the
 # model chain refers to them and they would otherwise be left behind.
-for prefix in ("entity/chest/copper", "entity/copper_golem/"):
+for prefix in ("entity/chest/copper", "entity/copper_golem/",
+               # The mobs drawn from dumped geometry. Their skins live under entity/
+               # like the chests do, so no model refers to them and they would be
+               # left behind by the model walk.
+               "entity/creaking/", "entity/ghast/happy_ghast",
+               "entity/nautilus/", "entity/sulfur_cube/"):
     for name in names:
         if name.startswith("assets/minecraft/textures/" + prefix) and name.endswith(".png"):
             copy_texture(name[len("assets/minecraft/textures/"):-len(".png")])
@@ -246,6 +251,27 @@ with open(os.path.join(OUT, "lang", "en_us.json"), "w", encoding="utf-8") as f:
 
 with open(MANIFEST, "w", encoding="utf-8") as f:
     json.dump({"blocks": manifest}, f, indent=1)
+
+# The mobs a 1.21 client has no entity type for, for the server to stand in for.
+#
+# Boats and potions are filtered out: 26.2 split the single boat entity into one per wood
+# and the single potion into splash and lingering, so a 1.21 client already draws all of
+# them and ViaBackwards already maps them. Standing in for those would replace something
+# that works with something worse.
+old_mobs = lang_keys(OLD, "entity.minecraft.")
+new_mobs = lang_keys(NEW, "entity.minecraft.")
+renamed = ("_boat", "_raft", "_chest_boat", "_chest_raft")
+mobs = sorted(m for m in set(new_mobs) - set(old_mobs)
+              if not m.endswith(renamed)
+              and m not in ("splash_potion", "lingering_potion"))
+MOBS = ("C:/Users/cupy/Desktop/Dev/Work/Minecraft/HOLD SMP/NanoCore/src/main/resources/"
+        "legacy-mobs.txt")
+with io.open(MOBS, "w", encoding="utf-8", newline=chr(10)) as f:
+    f.write("# Mobs a 1.21 client cannot be sent. Written by genreal.py, not by hand."
+            + chr(10))
+    for m in mobs:
+        f.write(m + chr(10))
+print("core mobs  : legacy-mobs.txt (%d)" % len(mobs))
 
 # The same list, for the server. It has to know which of its blocks an old client cannot
 # be sent, and that is exactly this set. Generated rather than typed twice, because two
