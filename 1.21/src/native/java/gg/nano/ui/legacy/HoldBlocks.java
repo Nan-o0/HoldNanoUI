@@ -159,24 +159,63 @@ public final class HoldBlocks {
         if (kind.equals("statue")) {
             return new StatueBlock(settingsFor(kind), properties);
         }
-        Block matched = fromFamily(kind, settingsFor(kind));
-        // Trust the family only as far as it goes. Matching by name is right nearly every
-        // time, and when it is not - a moss carpet is not a carpet, it climbs walls - the
-        // vanilla class silently lacks the state the models need and two thirds of the block
-        // never renders. Checking is cheap; noticing in game is not.
-        if (matched != null && hasAll(matched, properties.keySet())) {
-            return matched;
+        // Decided before anything is built, and that ordering is the whole point.
+        //
+        // This used to construct the vanilla block, look at what state it turned out to have,
+        // and drop it if that was not enough. Constructing a Block registers an intrusive
+        // holder with the block registry, so the dropped one stayed behind unclaimed and the
+        // registry refused to freeze at the end of startup: the game got as far as loading
+        // every one of these and then died with "some intrusive holders were not registered".
+        // A block that is never built cannot be left behind.
+        if (fits(kind, properties.keySet())) {
+            Block matched = fromFamily(kind, settingsFor(kind));
+            if (matched != null) {
+                return matched;
+            }
         }
         return new GenericBlock(settingsFor(kind), properties);
     }
 
-    /** Whether a block's state definition includes every named property. */
-    private static boolean hasAll(Block block, java.util.Set<String> wanted) {
-        java.util.Set<String> got = new java.util.HashSet<>();
-        for (Property<?> p : block.getStateDefinition().getProperties()) {
-            got.add(p.getName());
-        }
-        return got.containsAll(wanted);
+    /**
+     * The state each vanilla family carries, read off the real classes rather than recalled.
+     *
+     * <p>Matching by name is right nearly every time, and when it is not the mismatch is
+     * quiet: a moss carpet is not a carpet, it climbs walls, and plain carpet has no state at
+     * all, so two thirds of it would never have rendered.
+     */
+    private static final Map<String, java.util.Set<String>> FAMILY_STATE = new HashMap<>();
+
+    static {
+        FAMILY_STATE.put("stairs", java.util.Set.of("facing", "half", "shape", "waterlogged"));
+        FAMILY_STATE.put("slab", java.util.Set.of("type", "waterlogged"));
+        FAMILY_STATE.put("wall",
+                java.util.Set.of("east", "north", "south", "up", "waterlogged", "west"));
+        FAMILY_STATE.put("fence",
+                java.util.Set.of("east", "north", "south", "waterlogged", "west"));
+        FAMILY_STATE.put("fence_gate",
+                java.util.Set.of("facing", "in_wall", "open", "powered"));
+        FAMILY_STATE.put("door",
+                java.util.Set.of("facing", "half", "hinge", "open", "powered"));
+        FAMILY_STATE.put("trapdoor",
+                java.util.Set.of("facing", "half", "open", "powered", "waterlogged"));
+        FAMILY_STATE.put("button", java.util.Set.of("face", "facing", "powered"));
+        FAMILY_STATE.put("pressure_plate", java.util.Set.of("powered"));
+        FAMILY_STATE.put("bars",
+                java.util.Set.of("east", "north", "south", "waterlogged", "west"));
+        FAMILY_STATE.put("chain", java.util.Set.of("axis", "waterlogged"));
+        FAMILY_STATE.put("lantern", java.util.Set.of("hanging", "waterlogged"));
+        FAMILY_STATE.put("carpet", java.util.Set.of());
+        FAMILY_STATE.put("leaves", java.util.Set.of("distance", "persistent", "waterlogged"));
+        FAMILY_STATE.put("pillar", java.util.Set.of("axis"));
+        // Chests are the one family taken on trust, because a chest is drawn by a renderer
+        // and its blockstate file lists no variants at all - there is nothing to compare.
+        FAMILY_STATE.put("chest", java.util.Set.of("facing", "type", "waterlogged"));
+    }
+
+    /** Whether the vanilla class for a family carries every property the models need. */
+    static boolean fits(String kind, java.util.Set<String> wanted) {
+        java.util.Set<String> has = FAMILY_STATE.get(kind);
+        return has != null && has.containsAll(wanted);
     }
 
     private static Block fromFamily(String kind, BlockBehaviour.Properties settings) {
