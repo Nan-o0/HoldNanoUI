@@ -145,6 +145,106 @@ def blockstate_models(raw):
 shutil.rmtree(OUT, ignore_errors=True)
 os.makedirs(OUT, exist_ok=True)
 
+# --- blocks that exist in both versions and were redrawn ----------------------------------
+#
+# Separate from the carrier trick, and the bigger half of what makes an old client look old.
+# A redstone torch exists in 1.21 and was redesigned in 26.x; a 1.21 client draws the one it
+# shipped with, which is correct for it and wrong for this server. Same for stained glass,
+# comparators, fences and a few hundred others.
+#
+# These are safe to replace outright because the model format did not change. The only thing
+# 26.2 adds is a display slot called on_shelf, which 1.21 rejects the whole model over, so it
+# is stripped on the way through. With that gone the two versions parse the same files.
+old_jar = zipfile.ZipFile(OLD_JAR)
+old_names = set(old_jar.namelist())
+
+
+def strip_unknown(data):
+    """Removes what 1.21 cannot parse. Only on_shelf, checked across every model in 26.2."""
+    if "display" in data:
+        data["display"] = {k: v for k, v in data["display"].items() if k != "on_shelf"}
+        if not data["display"]:
+            del data["display"]
+    return data
+
+
+def refresh_model(ref, wrote):
+    """Writes the 26.2 model and everything under it, under its own name."""
+    ref = ref.split(":")[-1]
+    if ref in wrote:
+        return
+    src = "assets/minecraft/models/" + ref + ".json"
+    if src not in names:
+        return
+    wrote.add(ref)
+    data = strip_unknown(json.loads(jar.read(src)))
+    dst = os.path.join(OUT, "assets/minecraft/models", ref + ".json")
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, "w", encoding="utf-8") as f:
+        json.dump(data, f, separators=(",", ":"))
+    if "parent" in data:
+        refresh_model(data["parent"], wrote)
+    for tex in (data.get("textures") or {}).values():
+        if isinstance(tex, str) and not tex.startswith("#"):
+            refresh_texture(tex)
+
+
+def refresh_texture(ref):
+    ref = ref.split(":")[-1]
+    src = "assets/minecraft/textures/" + ref + ".png"
+    if src not in names:
+        return
+    old = "assets/minecraft/textures/" + ref + ".png"
+    if old in old_names and old_jar.read(old) == jar.read(src):
+        return  # identical in both, so the client's own is already right
+    dst = os.path.join(OUT, "assets/minecraft/textures", ref + ".png")
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, "wb") as f:
+        f.write(jar.read(src))
+    redrawn.add(ref)
+    if src + ".mcmeta" in names:
+        with open(dst + ".mcmeta", "wb") as f:
+            f.write(jar.read(src + ".mcmeta"))
+
+
+redrawn = set()
+written_models = set()
+
+# every model that really is different, once on_shelf is discounted
+for name in sorted(names):
+    if not name.startswith("assets/minecraft/models/") or not name.endswith(".json"):
+        continue
+    if name not in old_names:
+        continue
+    if old_jar.read(name) == jar.read(name):
+        continue
+    try:
+        if strip_unknown(json.loads(jar.read(name))) == json.loads(old_jar.read(name)):
+            continue  # only ever differed by the slot we strip
+    except Exception:
+        continue
+    refresh_model(name[len("assets/minecraft/models/"):-len(".json")], written_models)
+
+# and the blockstates that point at them
+refreshed_states = 0
+for name in sorted(names):
+    if not name.startswith("assets/minecraft/blockstates/"):
+        continue
+    if name not in old_names or old_jar.read(name) == jar.read(name):
+        continue
+    raw = jar.read(name)
+    for model in blockstate_models(raw):
+        refresh_model(model, written_models)
+    dst = os.path.join(OUT, "assets/minecraft/blockstates",
+                       os.path.basename(name))
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, "wb") as f:
+        f.write(raw)
+    refreshed_states += 1
+
+print(f"redrawn     : {len(written_models)} models, {len(redrawn)} textures, "
+      f"{refreshed_states} blockstates")
+
 # --- shaped blocks: the carrier's blockstate file becomes the new block's -----------------
 for new, carrier in SHAPED.items():
     raw = read(f"assets/minecraft/blockstates/{new}.json")
@@ -239,11 +339,23 @@ if missing:
 import hashlib
 
 zip_path = os.path.join(os.path.dirname(OUT), "HoldSMP-Legacy-Blocks.zip")
+# Written with a fixed timestamp so the same content always gives the same hash. A zip
+# normally stores each file's modification time, so building twice from identical sources
+# produced two different sha1s - and the sha1 is what the server tells the client to expect,
+# so a rebuild that changed nothing still looked like a different pack.
+entries = []
+for root, _, files in os.walk(OUT):
+    for name in files:
+        full = os.path.join(root, name)
+        entries.append((os.path.relpath(full, OUT).replace("\\", "/"), full))
+
 with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-    for root, _, files in os.walk(OUT):
-        for name in sorted(files):
-            full = os.path.join(root, name)
-            z.write(full, os.path.relpath(full, OUT).replace("\\", "/"))
+    for rel, full in sorted(entries):
+        info = zipfile.ZipInfo(rel, date_time=(1980, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o644 << 16
+        with open(full, "rb") as f:
+            z.writestr(info, f.read())
 
 blob = open(zip_path, "rb").read()
 print()
