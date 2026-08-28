@@ -14,6 +14,16 @@ MC = ("/c/Users/cupy/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/"
       "minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar").replace("/c/", "C:/")
 OUT = ("C:/Users/cupy/Desktop/Dev/Work/Minecraft/HOLD SMP/NanoEssentials/legacy-pack")
 
+# A second, smaller pack for players who have the mod.
+#
+# A server pack is applied on top of whatever packs the player chose, so it always wins. Every
+# minecraft: path this overrides is one the player's own texture pack no longer controls. For
+# somebody running the mod most of that is wasted anyway: they get the new blocks as real
+# blocks in our own namespace and never need a carrier. So they get only the part that cannot
+# be done any other way - the blocks 1.21 has and draws the old way, like the redstone torch -
+# and keep their own textures for everything else.
+SLIM = ("C:/Users/cupy/Desktop/Dev/Work/Minecraft/HOLD SMP/NanoEssentials/legacy-pack-slim")
+
 # new block -> carrier that already exists in 1.21 with the same collision shape.
 #
 # Full cubes ride note block NOTE values rather than instruments. Instrument is decided by the
@@ -338,6 +348,38 @@ if missing:
 # --- zip it, and print the sha1 the server config needs -----------------------------------
 import hashlib
 
+# The slim pack is the redesigned blocks only: everything written before the carrier section
+# ran. Copied out at that point rather than rebuilt.
+shutil.rmtree(SLIM, ignore_errors=True)
+os.makedirs(SLIM, exist_ok=True)
+
+# Geometry only, and nothing else.
+#
+# A model says what shape a block is; a texture says what it looks like. The shape is what
+# changed and what a 1.21 client cannot work out for itself, so that is shipped. The pixels
+# are left to whatever pack the player chose, which is the whole point: a redstone torch comes
+# out the right shape wearing their textures rather than ours.
+#
+# Carriers are left out too. A player with the mod has the new blocks for real and has no use
+# for a stair pretending to be a shelf.
+for sub in ("models", "blockstates"):
+    src = os.path.join(OUT, "assets/minecraft", sub)
+    if not os.path.isdir(src):
+        continue
+    for root, _, files in os.walk(src):
+        for name in files:
+            full = os.path.join(root, name)
+            rel = os.path.relpath(full, OUT)
+            if sub == "blockstates":
+                # only the ones that changed shape, not the carrier substitutions
+                plain = os.path.splitext(name)[0]
+                if plain in SHAPED.values() or plain == "note_block":
+                    continue
+            dst = os.path.join(SLIM, rel)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copyfile(full, dst)
+shutil.copyfile(os.path.join(OUT, "pack.mcmeta"), os.path.join(SLIM, "pack.mcmeta"))
+
 zip_path = os.path.join(os.path.dirname(OUT), "HoldSMP-Legacy-Blocks.zip")
 # Written with a fixed timestamp so the same content always gives the same hash. A zip
 # normally stores each file's modification time, so building twice from identical sources
@@ -362,4 +404,23 @@ print()
 print(f"zip         : {zip_path}")
 print(f"size        : {len(blob)} bytes")
 print(f"sha1        : {hashlib.sha1(blob).hexdigest()}")
+slim_path = os.path.join(os.path.dirname(OUT), "HoldSMP-Legacy-Slim.zip")
+slim_entries = []
+for root, _, files in os.walk(SLIM):
+    for name in files:
+        full = os.path.join(root, name)
+        slim_entries.append((os.path.relpath(full, SLIM).replace("\\", "/"), full))
+with zipfile.ZipFile(slim_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for rel, full in sorted(slim_entries):
+        info = zipfile.ZipInfo(rel, date_time=(1980, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        info.external_attr = 0o644 << 16
+        with open(full, "rb") as f:
+            z.writestr(info, f.read())
+blob = open(slim_path, "rb").read()
+print()
+print(f"slim zip    : {slim_path}")
+print(f"slim size   : {len(blob)} bytes")
+print(f"slim sha1   : {hashlib.sha1(blob).hexdigest()}")
+print("The slim one goes to players who have the mod; it leaves their own textures alone.")
 print("Upload it, then put the URL and that sha1 in ui.legacy-pack-url / ui.legacy-pack-sha1.")
