@@ -18,8 +18,8 @@ import sys
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MODERN = os.path.join(HERE, "build", "libs", "nanoui-1.1.2.jar")
-LEGACY = os.path.join(HERE, "..", "NanoUI-1.21", "build", "libs", "nanoui-1.21-1.1.2.jar")
+MODERN = os.path.join(HERE, "build", "libs", "nanoui-1.2.0.jar")
+LEGACY = os.path.join(HERE, "..", "NanoUI-1.21", "build", "libs", "nanoui-1.21-1.2.0.jar")
 OUT = os.path.join(HERE, "build", "libs", "Nan0UI.jar")
 
 LEGACY_PREFIX = "gg/nano/ui/legacy/"
