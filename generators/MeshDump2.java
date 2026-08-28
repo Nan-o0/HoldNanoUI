@@ -22,10 +22,18 @@ public class MeshDump2 {
 
     static final String[] CLASSES = {
         "net.minecraft.client.model.animal.golem.CopperGolemModel",
+        // A shape everybody knows, to tell a broken model apart from a broken
+        // renderer. If the creeper comes out wrong then the drawing is wrong.
+        "net.minecraft.client.model.monster.creeper.CreeperModel",
         "net.minecraft.client.model.monster.creaking.CreakingModel",
         "net.minecraft.client.model.animal.ghast.HappyGhastModel",
         "net.minecraft.client.model.animal.nautilus.NautilusModel",
         "net.minecraft.client.model.monster.slime.SulfurCubeModel",
+        "net.minecraft.client.model.animal.nautilus.NautilusArmorModel",
+        "net.minecraft.client.model.animal.nautilus.NautilusSaddleModel",
+        "net.minecraft.client.model.monster.nautilus.ZombieNautilusCoralModel",
+        "net.minecraft.client.model.animal.ghast.HappyGhastHarnessModel",
+        "net.minecraft.client.model.monster.slime.SmallSulfurCubeModel",
     };
 
     public static void main(String[] args) throws Exception {
@@ -144,10 +152,11 @@ public class MeshDump2 {
         return b.append("  ".repeat(depth)).append("}").toString();
     }
 
-    /** x, y, z, xRot, yRot, zRot. */
+    /** x, y, z, xRot, yRot, zRot, and the three scales, which a part can also carry. */
     static String pose(Object pose) throws Exception {
         List<String> v = new ArrayList<>();
-        for (String name : new String[]{"x", "y", "z", "xRot", "yRot", "zRot"}) {
+        for (String name : new String[]{"x", "y", "z", "xRot", "yRot", "zRot",
+                                        "xScale", "yScale", "zScale"}) {
             Field f = pose.getClass().getDeclaredField(name);
             f.setAccessible(true);
             v.add(num((float) f.get(pose)));

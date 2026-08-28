@@ -239,6 +239,9 @@ for prefix in ("entity/chest/copper", "entity/copper_golem/",
                # like the chests do, so no model refers to them and they would be
                # left behind by the model walk.
                "entity/creaking/", "entity/ghast/happy_ghast",
+               # equipment skins as well, so armour and harnesses are there when the
+               # server starts telling us what a mob is wearing
+               "entity/equipment/nautilus", "entity/equipment/happy_ghast",
                "entity/nautilus/", "entity/sulfur_cube/"):
     for name in names:
         if name.startswith("assets/minecraft/textures/" + prefix) and name.endswith(".png"):

@@ -3,6 +3,7 @@ package gg.nano.ui.legacy;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
@@ -29,17 +30,23 @@ import java.util.Map;
  */
 public final class HoldGeometry {
 
-    private static Map<String, JsonObject> layers;
+    /**
+     * Loaded files, keyed by which file. One cache for all of them returned the mob geometry
+     * when the statue geometry was asked for, because the first file read won.
+     */
+    private static final Map<String, Map<String, JsonObject>> FILES = new HashMap<>();
 
     private HoldGeometry() {
     }
 
     /** Every named layer in a dump file, loaded once. */
     private static synchronized Map<String, JsonObject> load(String resource) {
-        if (layers != null) {
-            return layers;
+        Map<String, JsonObject> cached = FILES.get(resource);
+        if (cached != null) {
+            return cached;
         }
-        layers = new HashMap<>();
+        Map<String, JsonObject> layers = new HashMap<>();
+        FILES.put(resource, layers);
         try (InputStream in = HoldGeometry.class.getResourceAsStream(resource)) {
             if (in == null) {
                 System.err.println("[Nan0UI] " + resource + " is missing from the jar.");
@@ -120,5 +127,41 @@ public final class HoldGeometry {
         return PartPose.offsetAndRotation(
                 p.get(0).getAsFloat(), p.get(1).getAsFloat(), p.get(2).getAsFloat(),
                 p.get(3).getAsFloat(), p.get(4).getAsFloat(), p.get(5).getAsFloat());
+    }
+
+    /**
+     * Applies the part scales, which have to wait until after the model is built.
+     *
+     * <p>A part can be scaled as well as moved and turned, and 1.21 has nowhere to put that
+     * when the model is described: its PartPose carries a position and a rotation and nothing
+     * else. The baked part does have the fields, so they are filled in here.
+     *
+     * <p>Not cosmetic. The happy ghast is drawn at a quarter size and scaled back up by four
+     * at the root, so without this it is a quarter of the size it should be, and nothing else
+     * about it looks wrong enough to make you check.
+     */
+    public static void applyScale(String resource, String name, ModelPart root) {
+        JsonObject entry = load(resource).get(name);
+        if (entry == null) {
+            return;
+        }
+        scalePart(entry.getAsJsonObject("root"), root);
+    }
+
+    private static void scalePart(JsonObject described, ModelPart part) {
+        JsonArray pose = described.getAsJsonArray("pose");
+        if (pose.size() >= 9) {
+            part.xScale = pose.get(6).getAsFloat();
+            part.yScale = pose.get(7).getAsFloat();
+            part.zScale = pose.get(8).getAsFloat();
+        }
+        JsonObject children = described.getAsJsonObject("children");
+        for (String name : children.keySet()) {
+            try {
+                scalePart(children.getAsJsonObject(name), part.getChild(name));
+            } catch (Exception ignored) {
+                // A part named in the dump that is not in the baked model. Nothing to scale.
+            }
+        }
     }
 }
