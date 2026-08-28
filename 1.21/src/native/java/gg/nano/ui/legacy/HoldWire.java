@@ -66,7 +66,16 @@ public final class HoldWire {
 
         List<BlockState> states = new ArrayList<>(palette.length);
         for (String one : palette) {
-            states.add(parse(one));
+            BlockState parsed = parse(one);
+            if (parsed == null && !one.isEmpty()) {
+                unknown++;
+            }
+            states.add(parsed);
+        }
+        messages++;
+        // The first one confirms the whole path works, and then rarely enough to be ignorable.
+        if (messages == 1 || messages % 200 == 0) {
+            report();
         }
 
         Minecraft client = Minecraft.getInstance();
@@ -129,6 +138,26 @@ public final class HoldWire {
                 Block.UPDATE_ALL | Block.UPDATE_KNOWN_SHAPE);
     }
 
+    /**
+     * Counters, so a player can be asked what their log says instead of being asked to guess.
+     *
+     * <p>Every failure so far has looked identical from the outside - nothing changes - and
+     * has had a different cause each time. Three numbers separate them: no messages at all
+     * means the server is not sending, messages with nothing applied means the blocks are not
+     * arriving where they are expected, and unknown names mean the two sides disagree about
+     * what exists.
+     */
+    private static int messages;
+    private static int applied;
+    private static int unknown;
+    private static int held;
+
+    private static void report() {
+        System.out.println("[Nan0UI] blocks: " + messages + " messages, " + applied
+                + " placed, " + held + " waiting for their chunk, " + unknown
+                + " names this build does not have.");
+    }
+
     private static void apply(Minecraft client, int chunkX, int chunkZ,
                               List<BlockState> states, String[] entries) {
         var level = client.level;
@@ -168,9 +197,11 @@ public final class HoldWire {
                     // would leave it looking wrong until the chunk was loaded again, which
                     // for somebody standing still is never. Held and retried instead.
                     pending.add(new Pending(pos, state));
+                    held++;
                     continue;
                 }
                 place(level, pos, state);
+                applied++;
             } catch (NumberFormatException ignored) {
                 // One malformed entry costs that block and nothing else.
             }

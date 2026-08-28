@@ -131,6 +131,7 @@ public final class HoldRenderers {
         StatueRenderer(BlockEntityRendererProvider.Context context) {
             for (int i = 0; i < POSES.length; i++) {
                 byPose[i] = context.bakeLayer(STATUE_LAYERS[i]);
+                HoldGeometry.applyScale(STATUE_GEOMETRY, POSES[i], byPose[i]);
             }
         }
 
